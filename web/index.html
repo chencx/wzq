@@ -1,0 +1,181 @@
+<html>
+<head>
+	<title>ZC五子棋</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script src="jquery-1.7.2.min.js" type="text/javascript"></script>
+	<style>
+		.body{width:700px;height: 700px;margin:0px auto;}
+		.qipan{width:540px;height:540px;background: url(qp.jpg) no-repeat;float:left;}
+		.buttonlist{width:100px;float:right;}
+		#title{line-height: 40px;margin-left: 230px;}
+	</style>
+  	<script>
+  	var cookie="";//服务器认证
+  	var canclick=false;//如果是对弈玩家当前是否可落子
+  	var current="";//观棋玩家观看的棋谱
+  	//初始化
+  	function init(){
+  		$("#qipan").html("");
+  		current="";
+  		cookie="";
+  		canclick=false;
+  		$("#startbtn").attr("style","display:none");
+  	}
+  	//开始比赛或开始观赛 
+  	function start(){
+  		init();
+  		var iswatch=false;
+		$.ajax({
+			cache: true,
+			type: "POST",
+			url:"/start",
+			async: false,
+			success: function(data) {
+				eval("var jsondata="+data);
+				if(jsondata.cookie==null||jsondata.cookie==""){
+					iswatch=true;
+					$("#title").html("正在比赛中，仅可观看");
+				}else{
+					canclick=true;
+					cookie=jsondata.cookie;
+					$("#title").html("比赛开始");
+				}
+			}
+		});
+		if(iswatch){
+			var icount=setInterval(function(){
+				$.ajax({
+					cache: true,
+					type: "POST",
+					url:"/query",
+					async: false,
+					success: function(data) {
+						eval("var jsondata="+data);
+						var thiscurrent=jsondata.current;
+						if(thiscurrent!=null&&current!=thiscurrent){
+							for(var i=0;i<thiscurrent.length;i++){
+								var isappend=true;
+								if(current.length>i){
+									if(current[i]==thiscurrent[i]){
+										isappend=false;
+									}
+								}
+								if(isappend){
+									if(parseInt(thiscurrent[i])==1){
+										appendImgForIndex(i,"heiz.png");
+									}
+									if(parseInt(thiscurrent[i])==2){
+										appendImgForIndex(i,"baiz.png");
+									}
+								}
+							}
+						}
+						current=thiscurrent;
+						if(jsondata.msg!=""){
+							setTimeout(function(){
+								clearInterval(icount);
+  								$("#startbtn").attr("style","");
+  								$("#title").html("比赛结束："+jsondata.msg);
+							}, 500);
+						}
+					}
+				});
+			}, 2000);
+		}
+	}
+  	$(document).click(function(e){
+  		if(cookie!=""){
+  			if(canclick){
+		  		var x=e.pageX-$("#qipan").offset().left-21;
+				var y=e.pageY-$("#qipan").offset().top-21;
+				jsx=x%35;
+				jsy=y%35;
+				if(x<-10||y<-10||x>500||y>500){
+					return false;
+				}
+				x=jsz(x,jsx);
+				y=jsz(y,jsy);
+				appendImg(0,x,y,"heiz.png");
+				var index=xyToIndex(x,y);
+				canclick=false;
+				setTimeout(myclick(index), 500)
+			}
+		}
+	});
+	//近似值
+	function jsz(val0,val1){
+		var resutl=0;
+		if(val1<18){
+			 resutl=val0-val1;
+		}else{
+			resutl=val0+35-val1;
+		}
+		if(resutl<0){
+			resutl=0;
+		}
+		if(resutl>490){
+			resutl=490; 
+		}
+		return resutl;
+	}
+	function appendImg(index,x,y,imgnm){
+		var left=parseInt($("#qipan").offset().left)+parseInt(x)+parseInt(7);
+		var top=parseInt($("#qipan").offset().top)+parseInt(y)+parseInt(7);
+		var appendstr="<img src='"+imgnm+"' index='"+index+"' style='position: absolute;left: "+left+"px;top: "+top+"px;'>";
+		$("#qipan").append(appendstr);
+	}
+	function appendImgForIndex(index,imgnm){
+		var xy=indexToXY(index);
+		var arrxy=xy.split(",");
+		if(arrxy.length==2){
+			appendImg(index,arrxy[0],arrxy[1],imgnm);
+		}
+	}
+	function xyToIndex(x,y){
+		return y/35*15+x/35
+	}
+	function indexToXY(index){
+		return ((index%15)*35)+","+(index-(index%15))/15*35;
+	}
+	function myclick(index){
+		$.ajax({
+			cache: true,
+			type: "POST",
+			url:"/click", 
+			data:{
+				"cookie":cookie,
+				"index":index
+			},
+			async: false,
+			success: function(data) {
+				eval("var jsondata="+data);
+				var xy=indexToXY(jsondata.index);
+				var arrxy=xy.split(",")
+				if(arrxy.length!=2){
+					alert("不好意思，系统出错");
+				}else{
+					appendImg(jsondata.index,arrxy[0],arrxy[1],"baiz.png");
+					canclick=true;
+				}
+				if(jsondata.msg!=""){
+					canclick=false;
+					setTimeout(function(){
+						$("#startbtn").attr("style","");
+						$("#title").html("比赛结束："+jsondata.msg);
+					}, 500);
+				}
+			}
+		});
+	}
+  	</script>
+</head>
+<body>
+	<div class="body">
+		<div id="title">未开始</div>
+		<div class="qipan" id="qipan"></div>
+		<div class="buttonlist">
+			<a href="javascript:void(0)" onclick="start()" id="startbtn">开始</a>
+		</div>
+	</div>
+</body>
+</html>
