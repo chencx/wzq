@@ -13,6 +13,12 @@ const (
 	Color_white = 2
 )
 
+type Win struct {
+	id    int
+	White int
+	Black int
+}
+
 type Chess struct {
 	Started       bool
 	MuxChess      sync.Mutex
@@ -21,6 +27,7 @@ type Chess struct {
 	CurrentString string
 	lastResult    int
 	lastTime      int64
+	WinArr        []*Win
 }
 
 var GChess *Chess = &Chess{}
@@ -54,8 +61,12 @@ func (c *Chess) NewGame() string {
 func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	c.MuxChess.Lock()
 	defer c.MuxChess.Unlock()
-	if !c.Started || c.cookie != cookie || pos < 0 || pos > 224 || c.Current[pos] != 0 {
+	if c.cookie != cookie || pos < 0 || pos > 224 || c.Current[pos] != 0 {
 		return false, 0, 0
+	}
+	//超时结束
+	if !c.Started {
+		return true, 3, -1
 	}
 	c.lastTime = time.Now().Unix()
 	c.Current[pos] = Color_black

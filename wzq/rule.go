@@ -7,7 +7,7 @@ import (
 )
 
 //是否获胜
-//返回0继续，1黑胜、2白胜
+//返回 0继续，1黑胜,2白胜,3和局
 func CheckWin(pos int, color int, arr []int) int {
 	x := pos/15 + 4
 	y := pos%15 + 4
@@ -51,7 +51,13 @@ func CheckWin(pos int, color int, arr []int) int {
 		}
 		b--
 	}
-	return 0
+	//判断是否和局
+	for _, v := range arr {
+		if v == 0 {
+			return 0
+		}
+	}
+	return 3
 }
 
 func ArrayToString(arr []int) string {

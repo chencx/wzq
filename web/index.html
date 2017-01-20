@@ -12,15 +12,40 @@
   	<script>
   	var cookie="";//服务器认证
   	var canclick=false;//如果是对弈玩家当前是否可落子
-  	var current="";//观棋玩家观看的棋谱
+  	var current="000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";//观棋玩家观看的棋谱
+
+  	//读秒定时器
+  	var timer=setInterval(function(){
+  		if(canclick){
+  			if(parseInt($("#times").attr("t"))>0){
+	  			var tmptime=parseInt($("#times").attr("t"))-1;
+	  			$("#times").attr("t",tmptime);
+	  			$("#times").html("倒计时："+tmptime+"秒");
+	  		}else{
+	  			if(parseInt($("#times").attr("t"))>-5){
+	  				var tmptime=parseInt($("#times").attr("t"))-1;
+	  				$("#times").attr("t",tmptime);
+	  				$("#times").html("倒计时：0秒");
+	  			}else{
+	  				canclick=false;
+	  				alert("您已超时，游戏结束");
+	  			}
+	  		}
+  		}else{
+  			$("#times").attr("t","60");
+  			$("#times").html("倒计时："+$("#times").attr("t")+"秒");
+  		}
+  	},1000);
+
   	//初始化
   	function init(){
   		$("#qipan").html("");
-  		current="";
+  		current="000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
   		cookie="";
   		canclick=false;
   		$("#startbtn").attr("style","display:none");
   	}
+  	
   	//开始比赛或开始观赛 
   	function start(){
   		init();
@@ -40,6 +65,9 @@
 					cookie=jsondata.cookie;
 					$("#title").html("比赛开始");
 				}
+			},
+			error: function(msg){
+				alert("请求异常");
 			}
 		});
 		if(iswatch){
@@ -78,11 +106,15 @@
   								$("#title").html("比赛结束："+jsondata.msg);
 							}, 500);
 						}
+					},
+					error: function(msg){
+						alert("请求异常");
 					}
 				});
 			}, 2000);
 		}
 	}
+
   	$(document).click(function(e){
   		if(cookie!=""){
   			if(canclick){
@@ -95,9 +127,15 @@
 				}
 				x=jsz(x,jsx);
 				y=jsz(y,jsy);
-				appendImg(0,x,y,"heiz.png");
 				var index=xyToIndex(x,y);
+				if(current.length>index){
+					if(current[index]!='0'){
+						return false;
+					}
+				}
 				canclick=false;
+				appendImg(0,x,y,"heiz.png");
+				current=current.substr(0,index)+"1"+current.substr(index+1,current.length);
 				setTimeout(myclick(index), 500)
 			}
 		}
@@ -146,10 +184,11 @@
 				"cookie":cookie,
 				"index":index
 			},
-			async: false,
+			async: true,
 			success: function(data) {
 				eval("var jsondata="+data);
 				var xy=indexToXY(jsondata.index);
+				current=current.substr(0,jsondata.index)+"2"+current.substr(jsondata.index+1,current.length);
 				var arrxy=xy.split(",")
 				if(arrxy.length!=2){
 					alert("不好意思，系统出错");
@@ -164,6 +203,9 @@
 						$("#title").html("比赛结束："+jsondata.msg);
 					}, 500);
 				}
+			},
+			error: function(msg){
+				alert("请求异常");
 			}
 		});
 	}
@@ -175,6 +217,7 @@
 		<div class="qipan" id="qipan"></div>
 		<div class="buttonlist">
 			<a href="javascript:void(0)" onclick="start()" id="startbtn">开始</a>
+			<div id="times" t="60">倒计时：60秒</div>
 		</div>
 	</div>
 </body>

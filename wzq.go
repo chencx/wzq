@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -14,6 +15,8 @@ const (
 	fmt_cookie = `{"cookie":"%s"}`
 	fmt_click  = `{"index":%d,"msg":"%s"}`
 )
+
+var muxClicked sync.Mutex
 
 func Cb_index(rw http.ResponseWriter, req *http.Request) {
 	log.Println("收到来自", req.RemoteAddr, "的访问")
@@ -48,6 +51,9 @@ func Cb_start(rw http.ResponseWriter, req *http.Request) {
 }
 func Cb_click(rw http.ResponseWriter, req *http.Request) {
 	//返回  {"index":12,"msg":""}   有输赢{"index":-1,"msg":"谁胜利"}
+	muxClicked.Lock()
+	defer muxClicked.Unlock()
+
 	cookie := req.FormValue("cookie")
 	pos := req.FormValue("index")
 	posInt, _ := strconv.Atoi(pos)
@@ -62,9 +68,12 @@ func Cb_click(rw http.ResponseWriter, req *http.Request) {
 		if over == 1 {
 			log.Println("游戏结束,黑胜")
 			fmt.Fprintf(rw, fmt_click, rst, "你赢了")
-		} else {
+		} else if over == 2 {
 			log.Println("游戏结束,白胜")
 			fmt.Fprintf(rw, fmt_click, rst, "你输了")
+		} else {
+			log.Println("黑方超时，游戏结束,白胜")
+			fmt.Fprintf(rw, fmt_click, rst, "超时，你输了")
 		}
 		return
 	}
