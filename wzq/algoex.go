@@ -1,64 +1,58 @@
 package wzq
 
-import (
-	"log"
-)
+import ()
 
 const (
 	E_MIN = -10000.0
 	E_MAX = 10000.0
 )
 
-var GWinCounts int = 100
-var GW []float64 = []float64{}
-
 //计算期望
 func GetE(arr []int) float64 {
-	val := 0
+	val := 0.0
 	for i, v := range arr {
-		val += v * GW[i]
+		val += float64(v) * GW[i]
 	}
 	return val
 }
 
 //获取黑白期望
-func GetWzqEvaluate(arr []int, winArr []*Win) (float64, float64) {
-	blackArr := []int{0, 0, 0, 0}
-	whiteArr := []int{0, 0, 0, 0}
+func GetWzqEvaluate(arr []int, winArr []*Win) float64 {
+	eArr := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	for i := 0; i < GWinCounts; i++ {
 		if winArr[i].Black == 5 {
-			return E_MAX
+			eArr[9]++
 		}
-		if winArr[i].white {
-			return E_MIN
+		if winArr[i].White == 5 {
+			eArr[8]++
 		}
-		if winArr[i].Black == 4 && winArr[i].white == 0 {
-			blackArr[3]++
+		if winArr[i].Black == 4 && winArr[i].White == 0 {
+			eArr[7]++
 		}
-		if winArr[i].Black == 0 && winArr[i].white == 4 {
-			whiteArr[3]++
+		if winArr[i].Black == 0 && winArr[i].White == 4 {
+			eArr[6]++
 		}
-		if winArr[i].Black == 3 && winArr[i].white == 0 {
-			blackArr[2]++
+		if winArr[i].Black == 3 && winArr[i].White == 0 {
+			eArr[5]++
 		}
-		if winArr[i].Black == 0 && winArr[i].white == 3 {
-			whiteArr[2]++
+		if winArr[i].Black == 0 && winArr[i].White == 3 {
+			eArr[4]++
 		}
-		if winArr[i].Black == 2 && winArr[i].white == 0 {
-			blackArr[1]++
+		if winArr[i].Black == 2 && winArr[i].White == 0 {
+			eArr[3]++
 		}
-		if winArr[i].Black == 0 && winArr[i].white == 2 {
-			whiteArr[1]++
+		if winArr[i].Black == 0 && winArr[i].White == 2 {
+			eArr[2]++
 		}
-		if winArr[i].Black == 1 && winArr[i].white == 0 {
-			blackArr[0]++
+		if winArr[i].Black == 1 && winArr[i].White == 0 {
+			eArr[1]++
 		}
-		if winArr[i].Black == 0 && winArr[i].white == 1 {
-			whiteArr[0]++
+		if winArr[i].Black == 0 && winArr[i].White == 1 {
+			eArr[0]++
 		}
 	}
-	return GetE(blackArr), GetE(whiteArr)
+	return GetE(eArr)
 }
 
 //输入棋盘，期望，输出期望，位置
@@ -75,8 +69,7 @@ func Moni_Put(arr []int, val float64) (float64, int) {
 		if CheckWin(p, 1, tmp) == 1 {
 			return val + 1, i
 		}
-		eb, ew := GetWzqEvaluate(tmp)
-		e = eb - ew
+		e := GetWzqEvaluate(tmp, GChess.WinArr)
 		if e >= val {
 			return val + 1, i
 		}
@@ -86,7 +79,7 @@ func Moni_Put(arr []int, val float64) (float64, int) {
 			pos = i
 		}
 	}
-	return e, i
+	return e_val, pos
 }
 
 //下棋，返回最大优势的点

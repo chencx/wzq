@@ -1,2 +1,2 @@
 #!/bin/sh
-go build -o server wzq.go && ./server
+go build -o main main.go && ./main

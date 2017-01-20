@@ -11,6 +11,7 @@ import (
 const (
 	Color_black = 1
 	Color_white = 2
+	Color_eque  = 3
 )
 
 type Win struct {
@@ -66,7 +67,7 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	}
 	//超时结束
 	if !c.Started {
-		return true, 3, -1
+		return true, 4, -1
 	}
 	c.lastTime = time.Now().Unix()
 	c.Current[pos] = Color_black

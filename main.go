@@ -16,13 +16,7 @@ const (
 	fmt_click  = `{"index":%d,"msg":"%s"}`
 )
 
-var muxClicked sync.Mutex
-
-func Cb_index(rw http.ResponseWriter, req *http.Request) {
-	log.Println("收到来自", req.RemoteAddr, "的访问")
-	log.Println(req.URL.Path)
-	//io.WriteString(rw, s)
-}
+var GMuxClicked sync.Mutex
 
 func Cb_query(rw http.ResponseWriter, req *http.Request) {
 	//{"current":"01020102020101021212121"}
@@ -33,6 +27,9 @@ func Cb_query(rw http.ResponseWriter, req *http.Request) {
 	}
 	if rst == wzq.Color_white {
 		msg = "白胜"
+	}
+	if rst == wzq.Color_eque {
+		msg = "和棋"
 	}
 	fmt.Fprintf(rw, fmt_query, replay, msg)
 }
@@ -51,8 +48,8 @@ func Cb_start(rw http.ResponseWriter, req *http.Request) {
 }
 func Cb_click(rw http.ResponseWriter, req *http.Request) {
 	//返回  {"index":12,"msg":""}   有输赢{"index":-1,"msg":"谁胜利"}
-	muxClicked.Lock()
-	defer muxClicked.Unlock()
+	GMuxClicked.Lock()
+	defer GMuxClicked.Unlock()
 
 	cookie := req.FormValue("cookie")
 	pos := req.FormValue("index")
@@ -65,14 +62,17 @@ func Cb_click(rw http.ResponseWriter, req *http.Request) {
 	}
 	//游戏结束
 	if over > 0 {
-		if over == 1 {
+		if over == wzq.Color_black {
 			log.Println("游戏结束,黑胜")
 			fmt.Fprintf(rw, fmt_click, rst, "你赢了")
-		} else if over == 2 {
+		} else if over == wzq.Color_white {
 			log.Println("游戏结束,白胜")
 			fmt.Fprintf(rw, fmt_click, rst, "你输了")
+		} else if over == wzq.Color_eque {
+			log.Println("游戏结束,和棋")
+			fmt.Fprintf(rw, fmt_click, rst, "和棋")
 		} else {
-			log.Println("黑方超时，游戏结束,白胜")
+			log.Println("黑方超时,游戏结束,白胜")
 			fmt.Fprintf(rw, fmt_click, rst, "超时，你输了")
 		}
 		return
