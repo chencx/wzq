@@ -45,7 +45,6 @@ func GetE(arr []int) float64 {
 	for i, v := range arr {
 		val += float64(v) * GW[i]
 	}
-	//log.Println("期望", val)
 	return val
 }
 
@@ -113,7 +112,7 @@ func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
 		}
 		//不能比输入的期望高
 		tmp[i] = 1
-		log.Println("下", i)
+		//log.Println("下", i)
 		arrpos := GPosMap[i]
 		for _, v := range arrpos {
 			w, ok := tmpwArr[v]
@@ -136,18 +135,18 @@ func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
 		e := GetE(GetXVlues(tmp, tmpwArr, i, Color_black))
 		if e >= val {
 			tmp[i] = 0
-			log.Println("期望大于传入", e)
+			//log.Println("期望大于传入", e)
 			return e
 		}
 		//更新最大期望
 		if e > e_val {
-			log.Println("更新期望", e, "位置", i)
+			//log.Println("更新期望", e, "位置", i)
 			e_val = e
 			pos = i
 		}
 		tmp[i] = 0
 	}
-	log.Println("人期望：", e_val, pos)
+	//log.Println("人期望：", e_val, pos)
 	return e_val
 }
 
@@ -166,7 +165,7 @@ func Put(arr []int, wArr map[int]*Win) int {
 			tmpwArr[k] = *v
 		}
 		tmp[i] = 2
-		log.Println("机下", i)
+		//log.Println("机下", i)
 		arrpos := GPosMap[i]
 		for _, v := range arrpos {
 			w, ok := tmpwArr[v]
@@ -189,7 +188,7 @@ func Put(arr []int, wArr map[int]*Win) int {
 		if e < e_val {
 			e_val = e
 			pos = i
-			log.Println("机器更新期望", e_val, pos)
+			//log.Println("机器更新期望", e_val, pos)
 		}
 		tmp[i] = 0
 	}
