@@ -28,11 +28,12 @@ type Chess struct {
 	CurrentString string
 	lastResult    int
 	lastTime      int64
-	WinArr        []*Win
+	MapWinArr     map[int]*Win ///当前棋局（经过转换）[赢法序号](状态)
 }
 
 var GChess *Chess = &Chess{}
 
+//获取当前状态，如果未开始，返回上一局结果，否则返回当前棋盘
 func (c *Chess) GetCurrent() (string, int) {
 	c.MuxChess.Lock()
 	defer c.MuxChess.Unlock()
@@ -43,6 +44,7 @@ func (c *Chess) GetCurrent() (string, int) {
 	return c.CurrentString, r
 }
 
+//请求新游戏，如果已经开始，返回空，否则初始化游戏，返回cookie
 func (c *Chess) NewGame() string {
 	c.MuxChess.Lock()
 	defer c.MuxChess.Unlock()
@@ -51,14 +53,16 @@ func (c *Chess) NewGame() string {
 	}
 	log.Println("新游戏开始")
 	c.Started = true
-	c.Current = make([]int, 255)
+	c.Current = make([]int, 225)
 	c.CurrentString = ArrayToString(c.Current)
 	c.cookie = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
 	c.lastTime = time.Now().Unix()
+	c.MapWinArr = make(map[int]*Win)
+	//log.Println(c.MapWinArr)
 	return c.cookie
 }
 
-//返回值  格式是否正确,谁赢)，下的点
+//返回值  格式是否正确,谁赢，下的点
 func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	c.MuxChess.Lock()
 	defer c.MuxChess.Unlock()
@@ -69,19 +73,23 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	if !c.Started {
 		return true, 4, -1
 	}
+	//人类下棋
 	c.lastTime = time.Now().Unix()
 	c.Current[pos] = Color_black
+	log.Println(c.MapWinArr)
+	UpdateWinMap(c.MapWinArr, pos, Color_black)
 	c.CurrentString = ArrayToString(c.Current)
 	r := CheckWin(pos, Color_black, c.Current)
 	//未分胜负，机器出牌
 	if r == 0 {
-		time.Sleep(time.Second * 1)
-		posWhite := ChessNext(c.Current)
+		time.Sleep(time.Millisecond * 100)
+		posWhite := Put(c.Current, c.MapWinArr)
 		c.Current[posWhite] = Color_white
+		UpdateWinMap(c.MapWinArr, posWhite, Color_white)
 		c.CurrentString = ArrayToString(c.Current)
 		rw := CheckWin(posWhite, Color_white, c.Current)
 		if rw == 0 {
-			return true, 0, posWhite
+			return true, rw, posWhite
 		} else {
 			c.Started = false
 			c.lastResult = rw

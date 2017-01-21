@@ -60,20 +60,11 @@ func CheckWin(pos int, color int, arr []int) int {
 	return 3
 }
 
+//数组转string
 func ArrayToString(arr []int) string {
 	buf := bytes.NewBufferString("")
-	for i := 0; i < 255; i++ {
+	for i := 0; i < 225; i++ {
 		buf.WriteString(fmt.Sprint(arr[i]))
 	}
 	return buf.String()
-}
-
-//传入棋局，传出下棋位置
-func ChessNext(arr []int) int {
-	for i := 0; i < 255; i++ {
-		if arr[i] == 0 {
-			return i
-		}
-	}
-	return -1
 }

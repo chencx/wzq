@@ -81,6 +81,10 @@ func Cb_click(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags)
+	wzq.InitWeight()
+	wzq.InitWinArr()
+	wzq.InitPosMap()
 	wzq.GChess.Start()
 	log.Println("五子棋服务启动...")
 	http.HandleFunc("/start", Cb_start)
