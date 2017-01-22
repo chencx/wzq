@@ -3,7 +3,7 @@ package wzq
 import (
 	"log"
 	//"time"
-	"math"
+	//"math"
 )
 
 const (
@@ -76,24 +76,20 @@ func GetXVlues(arr []int, winArr map[int]Win) []int {
 	eArr := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	//大局观
-	lr := 0.0
-	lj := 0.0
 	for i, p := range arr {
 		if p == 1 {
 			x := i / 15
 			y := i % 15
-			lr += math.Sqrt(float64((7-x)*(7-x) + (7-y)*(7-y)))
+			eArr[13] += (7-x)*(7-x) + (7-y)*(7-y)
 			eArr[11] += len(GPosMap[i])
 		}
 		if p == 2 {
 			x := i / 15
 			y := i % 15
-			lj += math.Sqrt(float64((7-x)*(7-x) + (7-y)*(7-y)))
+			eArr[12] += (7-x)*(7-x) + (7-y)*(7-y)
 			eArr[10] += len(GPosMap[i])
 		}
 	}
-	eArr[13] += int(lr)
-	eArr[12] += int(lj)
 
 	//连子
 	for _, v := range winArr {
