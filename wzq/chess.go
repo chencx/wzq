@@ -28,6 +28,7 @@ type Chess struct {
 	CurrentString string
 	lastResult    int
 	lastTime      int64
+	lastE         float64
 	MapWinArr     map[int]*Win ///当前棋局（经过转换）[赢法序号](状态)
 }
 
@@ -76,12 +77,25 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	//人类下棋
 	c.lastTime = time.Now().Unix()
 	c.Current[pos] = Color_black
-	log.Println(c.MapWinArr)
+	//log.Println(c.MapWinArr)
 	UpdateWinMap(c.MapWinArr, pos, Color_black)
 	c.CurrentString = ArrayToString(c.Current)
 	r := CheckWin(pos, Color_black, c.Current)
+
 	//未分胜负，机器出牌
 	if r == 0 {
+		tmpwArr := make(map[int]Win)
+		for k, v := range c.MapWinArr {
+			tmpwArr[k] = *v
+		}
+		x := GetXVlues(c.Current, tmpwArr)
+		enow := GetE(x)
+		log.Println("当前期望:", enow)
+		if c.lastE != 0 {
+			UpdateW(x, enow, c.lastE)
+		}
+		c.lastE = enow
+
 		time.Sleep(time.Millisecond * 100)
 		posWhite := Put(c.Current, c.MapWinArr)
 		c.Current[posWhite] = Color_white
@@ -91,11 +105,30 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 		if rw == 0 {
 			return true, rw, posWhite
 		} else {
+			//机器赢或平，更新期望
+			tmpwArr := make(map[int]Win)
+			for k, v := range c.MapWinArr {
+				tmpwArr[k] = *v
+			}
+			x := GetXVlues(c.Current, tmpwArr)
+			enow := GetE(x)
+			log.Println("机器赢,期望", enow)
+			UpdateW(x, E_MIN, enow)
 			c.Started = false
 			c.lastResult = rw
 			return true, rw, posWhite
 		}
 	} else {
+		//人赢或平,更新期望
+		tmpwArr := make(map[int]Win)
+		for k, v := range c.MapWinArr {
+			tmpwArr[k] = *v
+		}
+		x := GetXVlues(c.Current, tmpwArr)
+		enow := GetE(x)
+		log.Println("人赢,期望", enow)
+		UpdateW(x, E_MAX, enow)
+
 		c.Started = false
 		c.lastResult = r
 		return true, r, -1

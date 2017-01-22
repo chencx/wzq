@@ -1,6 +1,8 @@
 package wzq
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -10,6 +12,8 @@ import (
 var GWinMap map[int][]int = make(map[int][]int)
 var GPosMap map[int][]int = make(map[int][]int)
 var GW []float64 = []float64{}
+var GTotal int = 0
+var GWin int = 0
 
 func InitWeight() error {
 	content, err := ioutil.ReadFile("wzq.sav")
@@ -21,13 +25,24 @@ func InitWeight() error {
 	arr := strings.Split(string(content), "\r\n")
 	for _, s := range arr {
 		line := strings.Split(s, "=")
-		arrw := strings.Split(line[1], "*")
-		for _, w := range arrw {
-			wi, _ := strconv.ParseFloat(w, 64)
-			GW = append(GW, wi)
+		if line[0] == "w" {
+			arrw := strings.Split(line[1], "*")
+			for _, w := range arrw {
+				if len(w) == 0 {
+					continue
+				}
+				wi, _ := strconv.ParseFloat(w, 64)
+				GW = append(GW, wi)
+			}
+		}
+		if line[0] == "total" {
+			GTotal, _ = strconv.Atoi(line[1])
+		}
+		if line[0] == "win" {
+			GWin, _ = strconv.Atoi(line[1])
 		}
 	}
-	//log.Println("载入成功：", GW)
+	log.Println("载入成功：", GW, GTotal, GWin)
 	return nil
 }
 
@@ -77,4 +92,17 @@ func InitPosMap() {
 			}
 		}
 	}
+}
+
+func SaveResult() {
+	buf := bytes.NewBufferString("")
+	buf.WriteString("w=")
+	for _, w := range GW {
+		buf.WriteString(fmt.Sprint(w))
+		buf.WriteString("*")
+	}
+	buf.WriteString("\r\n")
+	buf.WriteString(fmt.Sprintf("total=%d\r\n", GTotal))
+	buf.WriteString(fmt.Sprintf("win=%d\r\n", GWin))
+	ioutil.WriteFile("wzq.sav", buf.Bytes(), 0x666)
 }

@@ -3,11 +3,12 @@ package wzq
 import (
 	"log"
 	//"time"
+	"math"
 )
 
 const (
-	E_MIN = -100000.0
-	E_MAX = 100000.0
+	E_MIN = -50000.0
+	E_MAX = 50000.0
 )
 
 //更新棋盘状态
@@ -34,9 +35,21 @@ func UpdateWinMap(winArr map[int]*Win, pos int, color int) {
 
 //调整权
 func UpdateW(x []int, E, Enow float64) {
-	for i, w := range GW {
-		w += 0.2 * float64(x[i]) * (E - Enow)
+	log.Println("更新前:", GW)
+	for i := 0; i < 4; i++ {
+		GW[i] += 0.000001 * float64(x[i]) * (E - Enow)
+		//log.Println("权:", i, x[i], E, Enow, GW[i])
 	}
+	for i := 4; i < 10; i++ {
+		GW[i] += 0.000001 * float64(x[i]) * (E - Enow)
+		//log.Println("权:", i, x[i], E, Enow, GW[i])
+	}
+	for i := 10; i < 14; i++ {
+		GW[i] += 0.000001 * float64(x[i]) * (E - Enow)
+		//GW[i] += 0.01 * float64((int(float64(x[i])*(E-Enow)) % 100))
+		//log.Println("权:", i, x[i], E, Enow, GW[i])
+	}
+	log.Println("更新后:", GW)
 }
 
 //计算期望
@@ -48,17 +61,41 @@ func GetE(arr []int) float64 {
 	return val
 }
 
-//获取棋盘状态
-func GetXVlues(arr []int, winArr map[int]Win, pos, color int) []int {
-	eArr := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+//计算期望
+func GetEX(arr []int) float64 {
+	val := 0.0
+	for i, v := range arr {
+		val += float64(v) * GW[i]
+		log.Println(v, "*", GW[i], val)
+	}
+	return val
+}
 
-	leng := len(GPosMap[pos])
-	if color == Color_black {
-		eArr[11] = leng
+//获取棋盘状态
+func GetXVlues(arr []int, winArr map[int]Win) []int {
+	eArr := []int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	//大局观
+	lr := 0.0
+	lj := 0.0
+	for i, p := range arr {
+		if p == 1 {
+			x := i / 15
+			y := i % 15
+			lr += math.Sqrt(float64((7-x)*(7-x) + (7-y)*(7-y)))
+			eArr[11] += len(GPosMap[i])
+		}
+		if p == 2 {
+			x := i / 15
+			y := i % 15
+			lj += math.Sqrt(float64((7-x)*(7-x) + (7-y)*(7-y)))
+			eArr[10] += len(GPosMap[i])
+		}
 	}
-	if color == Color_white {
-		eArr[10] = -leng
-	}
+	eArr[13] += int(lr)
+	eArr[12] += int(lj)
+
+	//连子
 	for _, v := range winArr {
 		if v.Black == 5 {
 			eArr[9]++
@@ -97,8 +134,8 @@ func GetXVlues(arr []int, winArr map[int]Win, pos, color int) []int {
 
 //输入棋盘，期望，输出期望，位置
 func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
-	e_val := E_MIN
-	pos := 0
+	e_val := -200000.0
+	//pos := 0
 	tmp := make([]int, 225)
 	copy(tmp, arr)
 	//log.Println("当前期望", tmp, val)
@@ -132,7 +169,7 @@ func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
 			log.Println("人下", i, "赢")
 			return val + 1
 		}
-		e := GetE(GetXVlues(tmp, tmpwArr, i, Color_black))
+		e := GetE(GetXVlues(tmp, tmpwArr))
 		if e >= val {
 			tmp[i] = 0
 			//log.Println("期望大于传入", e)
@@ -142,7 +179,7 @@ func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
 		if e > e_val {
 			//log.Println("更新期望", e, "位置", i)
 			e_val = e
-			pos = i
+			//pos = i
 		}
 		tmp[i] = 0
 	}
@@ -152,7 +189,7 @@ func Moni_Put(arr []int, val float64, wArr map[int]Win) float64 {
 
 //下棋，返回最大优势的点
 func Put(arr []int, wArr map[int]*Win) int {
-	e_val := E_MAX
+	e_val := 200000.0
 	pos := 0
 	tmp := make([]int, 225)
 	copy(tmp, arr)
@@ -192,6 +229,6 @@ func Put(arr []int, wArr map[int]*Win) int {
 		}
 		tmp[i] = 0
 	}
-	log.Println("最终期望", e_val, pos)
+	//log.Println("最终期望", e_val, pos)
 	return pos
 }
