@@ -14,7 +14,7 @@ const (
 	fmt_query  = `{"current":"%s","msg":"%s"}`
 	fmt_cookie = `{"cookie":"%s"}`
 	fmt_click  = `{"index":%d,"msg":"%s"}`
-	fmt_record = `{"total":%d,"win":"%d"}`
+	fmt_record = `{"total":%d,"win":%d}`
 )
 
 var GMuxClicked sync.Mutex
@@ -82,7 +82,7 @@ func Cb_click(rw http.ResponseWriter, req *http.Request) {
 }
 
 func Cb_record(rw http.ResponseWriter, req *http.Request) {
-	fmt.Fprint(rw, fmt_record, wzq.GTotal, wzq.GWin)
+	fmt.Fprintf(rw, fmt_record, wzq.GTotal, wzq.GWin)
 }
 
 func main() {

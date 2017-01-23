@@ -48,14 +48,14 @@
 					var total=jsondata.total;
 					var win=jsondata.win;
 					if(total!=undefined &&win!= undefined){
-						$("#record").html("战绩：共"+total+"盘，胜"+win+"盘");
+						$("#record").html("机器战绩："+total+"局"+win+"胜");
 					}
 				},
 				error: function(msg){
 					//alert("请求异常");
 				}
 			});
-		}, 10000);
+	}, 10000);
   	//初始化
   	function init(){
   		$("#qipan").html("");

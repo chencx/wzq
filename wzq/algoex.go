@@ -37,8 +37,8 @@ func UpdateWinMap(winArr map[int]*Win, pos int, color int) {
 
 //调整权
 func UpdateW(x []int, E, Enow float64) {
-	log.Println("更新前:", GW)
-	log.Println("棋盘状态:", x)
+	//log.Println("更新前:", GW)
+	//log.Println("棋盘状态:", x)
 	for i := 0; i < 16; i++ {
 		GW[i] += 0.000001 * float64(x[i]) * (E - Enow)
 		//log.Println("权:", i, x[i], E, Enow, GW[i])
