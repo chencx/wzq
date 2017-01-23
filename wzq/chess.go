@@ -80,7 +80,7 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	//log.Println(c.MapWinArr)
 	UpdateWinMap(c.MapWinArr, pos, Color_black)
 	c.CurrentString = ArrayToString(c.Current)
-	r := CheckWin(pos, Color_black, c.Current)
+	r := CheckWin(pos, Color_black, c.Current, false)
 
 	//未分胜负，机器出牌
 	if r == 0 {
@@ -101,7 +101,7 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 		c.Current[posWhite] = Color_white
 		UpdateWinMap(c.MapWinArr, posWhite, Color_white)
 		c.CurrentString = ArrayToString(c.Current)
-		rw := CheckWin(posWhite, Color_white, c.Current)
+		rw := CheckWin(posWhite, Color_white, c.Current, false)
 		if rw == 0 {
 			return true, rw, posWhite
 		} else {
@@ -112,8 +112,13 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 			}
 			x := GetXVlues(c.Current, tmpwArr)
 			enow := GetE(x)
-			log.Println("机器赢,期望", enow)
-			UpdateW(x, E_MIN, enow)
+			if rw == Color_white {
+				log.Println("机器赢,期望", enow)
+				UpdateW(x, E_MIN, enow)
+			} else {
+				log.Println("平局,期望", enow)
+				UpdateW(x, 0, enow)
+			}
 			c.Started = false
 			c.lastResult = rw
 			return true, rw, posWhite
@@ -126,8 +131,13 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 		}
 		x := GetXVlues(c.Current, tmpwArr)
 		enow := GetE(x)
-		log.Println("人赢,期望", enow)
-		UpdateW(x, E_MAX, enow)
+		if r == Color_black {
+			log.Println("人赢,期望", enow)
+			UpdateW(x, E_MAX, enow)
+		} else {
+			log.Println("平局,期望", enow)
+			UpdateW(x, 0, enow)
+		}
 
 		c.Started = false
 		c.lastResult = r

@@ -14,6 +14,7 @@ const (
 	fmt_query  = `{"current":"%s","msg":"%s"}`
 	fmt_cookie = `{"cookie":"%s"}`
 	fmt_click  = `{"index":%d,"msg":"%s"}`
+	fmt_record = `{"total":%d,"win":"%d"}`
 )
 
 var GMuxClicked sync.Mutex
@@ -80,16 +81,21 @@ func Cb_click(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(rw, fmt_click, rst, "")
 }
 
+func Cb_record(rw http.ResponseWriter, req *http.Request) {
+	fmt.Fprint(rw, fmt_record, wzq.GTotal, wzq.GWin)
+}
+
 func main() {
 	log.SetFlags(log.LstdFlags)
 	wzq.InitWeight()
 	wzq.InitWinArr()
 	wzq.InitPosMap()
 	wzq.GChess.Start()
-	log.Println("ZC五子棋v2.1 服务启动...")
+	log.Println("ZC五子棋v2.2 服务启动...")
 	http.HandleFunc("/start", Cb_start)
 	http.HandleFunc("/query", Cb_query)
 	http.HandleFunc("/click", Cb_click)
+	http.HandleFunc("/queryrecord", Cb_record)
 	http.Handle("/", http.FileServer(http.Dir("web")))
 	http.ListenAndServe(":8080", nil)
 }

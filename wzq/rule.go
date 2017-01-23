@@ -8,11 +8,11 @@ import (
 
 //是否获胜
 //返回 0继续，1黑胜,2白胜,3和局
-func CheckWin(pos int, color int, arr []int) int {
+func CheckWin(pos int, color int, arr []int, notreg bool) int {
 	r := color
 	defer func() {
-		if r != 0 {
-			log.Println("结果", r)
+		if r != 0 && !notreg {
+			//log.Println("结果", r)
 			if r == Color_black || r == Color_eque {
 				GTotal++
 			}
@@ -20,6 +20,7 @@ func CheckWin(pos int, color int, arr []int) int {
 				GTotal++
 				GWin++
 			}
+			log.Println("total", GTotal, "win", GWin)
 			SaveResult()
 		}
 	}()
@@ -36,14 +37,14 @@ func CheckWin(pos int, color int, arr []int) int {
 	//判断横
 	for b := y - 4; b <= y; b++ {
 		if stone[x][b] == color && stone[x][b+1] == color && stone[x][b+2] == color && stone[x][b+3] == color && stone[x][b+4] == color {
-			log.Println("横向5连 ", color, " 胜")
+			//log.Println("横向5连 ", color, " 胜")
 			return r
 		}
 	}
 	//判断竖
 	for a := x - 4; a <= x; a++ {
 		if stone[a][y] == color && stone[a+1][y] == color && stone[a+2][y] == color && stone[a+3][y] == color && stone[a+4][y] == color {
-			log.Println("竖向5连 ", color, " 胜")
+			//log.Println("竖向5连 ", color, " 胜")
 			return r
 		}
 	}
@@ -51,7 +52,7 @@ func CheckWin(pos int, color int, arr []int) int {
 	b := y - 4
 	for a := x - 4; a <= x; a++ {
 		if stone[a][b] == color && stone[a+1][b+1] == color && stone[a+2][b+2] == color && stone[a+3][b+3] == color && stone[a+4][b+4] == color {
-			log.Println("斜5连 ", color, " 胜")
+			//log.Println("斜5连 ", color, " 胜")
 			return r
 		}
 		b++
@@ -60,7 +61,7 @@ func CheckWin(pos int, color int, arr []int) int {
 	b = y + 4
 	for a := x - 4; a <= x; a++ {
 		if stone[a][b] == color && stone[a+1][b-1] == color && stone[a+2][b-2] == color && stone[a+3][b-3] == color && stone[a+4][b-4] == color {
-			log.Println("反斜5连 ", color, " 胜")
+			//log.Println("反斜5连 ", color, " 胜")
 			return r
 		}
 		b--

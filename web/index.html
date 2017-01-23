@@ -1,13 +1,14 @@
 <html>
 <head>
-	<title>ZC五子棋</title>
+	<title>ZC五子棋 v2.2</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<script src="jquery-1.7.2.min.js" type="text/javascript"></script>
 	<style>
 		.body{width:700px;height: 700px;margin:0px auto;}
 		.qipan{width:540px;height:540px;background: url(qp.jpg) no-repeat;float:left;}
-		.buttonlist{width:100px;float:right;}
+		.buttonlist{width:160px;float:right;}
 		#title{line-height: 40px;margin-left: 230px;}
+		.border{border:1px solid red;}
 	</style>
   	<script>
   	var cookie="";//服务器认证
@@ -36,7 +37,25 @@
   			$("#times").html("倒计时："+$("#times").attr("t")+"秒");
   		}
   	},1000);
-
+  	var recordtimer=setInterval(function(){
+			$.ajax({
+				cache: true,
+				type: "POST",
+				url:"/queryrecord",
+				async: true,
+				success: function(data) {
+					eval("var jsondata="+data);
+					var total=jsondata.total;
+					var win=jsondata.win;
+					if(total!=undefined &&win!= undefined){
+						$("#record").html("战绩：共"+total+"盘，胜"+win+"盘");
+					}
+				},
+				error: function(msg){
+					//alert("请求异常");
+				}
+			});
+		}, 10000);
   	//初始化
   	function init(){
   		$("#qipan").html("");
@@ -104,14 +123,14 @@
 								clearInterval(icount);
   								$("#startbtn").attr("style","");
   								$("#title").html("比赛结束："+jsondata.msg);
-							}, 500);
+							}, 100);
 						}
 					},
 					error: function(msg){
 						alert("请求异常");
 					}
 				});
-			}, 500);
+			}, 100);
 		}
 	}
 
@@ -159,7 +178,13 @@
 	function appendImg(index,x,y,imgnm){
 		var left=parseInt($("#qipan").offset().left)+parseInt(x)+parseInt(7);
 		var top=parseInt($("#qipan").offset().top)+parseInt(y)+parseInt(7);
-		var appendstr="<img src='"+imgnm+"' index='"+index+"' style='position: absolute;left: "+left+"px;top: "+top+"px;'>";
+		$("img").removeClass('border');
+		//"baiz.png"
+		var appendstr="<img src='"+imgnm+"' ";
+		if(imgnm=="baiz.png"){
+			appendstr=appendstr+" class='border' "
+		}
+		appendstr=appendstr+" index='"+index+"' style='position: absolute;left: "+left+"px;top: "+top+"px;'>";
 		$("#qipan").append(appendstr);
 	}
 	function appendImgForIndex(index,imgnm){
@@ -201,7 +226,7 @@
 					setTimeout(function(){
 						$("#startbtn").attr("style","");
 						$("#title").html("比赛结束："+jsondata.msg);
-					}, 500);
+					}, 100);
 				}
 			},
 			error: function(msg){
@@ -218,6 +243,7 @@
 		<div class="buttonlist">
 			<a href="javascript:void(0)" onclick="start()" id="startbtn">开始</a>
 			<div id="times" t="60">倒计时：60秒</div>
+			<div id="record"></div>
 		</div>
 	</div>
 </body>
