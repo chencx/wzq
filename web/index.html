@@ -1,61 +1,75 @@
 <html>
 <head>
-	<title>ZC五子棋 v2.2</title>
+	<title>ZC五子棋 v2.5</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<script src="jquery-1.7.2.min.js" type="text/javascript"></script>
 	<style>
-		.body{width:700px;height: 700px;margin:0px auto;}
+		.body{width:700px;height: 700px;margin:0px 0px 0px 230px;}
 		.qipan{width:540px;height:540px;background: url(qp.jpg) no-repeat;float:left;}
 		.buttonlist{width:160px;float:right;}
 		#title{line-height: 40px;margin-left: 230px;}
 		.border{border:1px solid red;}
+		#times{clear:both;}
+		.gamemod{width: 55px;float: left;border: 1px solid #D9DDDE;padding: 2px;background: #E1C8B7;color: #fff;font-size: 12px;font-family: 微软雅黑;text-align: center;}
+		.gamemod:hover{cursor: pointer;}
 	</style>
   	<script>
-  	var cookie="";//服务器认证
-  	var canclick=false;//如果是对弈玩家当前是否可落子
-  	var current="000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";//观棋玩家观看的棋谱
-
-  	//读秒定时器
-  	var timer=setInterval(function(){
-  		if(canclick){
-  			if(parseInt($("#times").attr("t"))>0){
-	  			var tmptime=parseInt($("#times").attr("t"))-1;
-	  			$("#times").attr("t",tmptime);
-	  			$("#times").html("倒计时："+tmptime+"秒");
+  	$(document).ready(function(){
+	  	var gamemod=0;
+	  	var cookie="";//服务器认证
+	  	var canclick=false;//如果是对弈玩家当前是否可落子
+	  	var current="000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";//观棋玩家观看的棋谱
+		//选择模式
+		$(".gamemod").click(function(){
+			if($("#startbtn").attr("style")==""||$("#startbtn").attr("style")==undefined){
+				$(".gamemod").attr("style","");
+				$(this).attr("style","background: #BD772A;");
+				$("#gamemod").attr("val",$(this).attr("val"));
+			}
+		});
+	});
+	  	//读秒定时器
+	  	var timer=setInterval(function(){
+	  		if(canclick){
+	  			if(parseInt($("#times").attr("t"))>0){
+		  			var tmptime=parseInt($("#times").attr("t"))-1;
+		  			$("#times").attr("t",tmptime);
+		  			$("#times").html("倒计时："+tmptime+"秒");
+		  		}else{
+		  			if(parseInt($("#times").attr("t"))>-5){
+		  				var tmptime=parseInt($("#times").attr("t"))-1;
+		  				$("#times").attr("t",tmptime);
+		  				$("#times").html("倒计时：0秒");
+		  			}else{
+		  				canclick=false;
+		  				alert("您已超时，游戏结束");
+		  			}
+		  		}
 	  		}else{
-	  			if(parseInt($("#times").attr("t"))>-5){
-	  				var tmptime=parseInt($("#times").attr("t"))-1;
-	  				$("#times").attr("t",tmptime);
-	  				$("#times").html("倒计时：0秒");
-	  			}else{
-	  				canclick=false;
-	  				alert("您已超时，游戏结束");
-	  			}
+	  			$("#times").attr("t","60");
+	  			$("#times").html("倒计时："+$("#times").attr("t")+"秒");
 	  		}
-  		}else{
-  			$("#times").attr("t","60");
-  			$("#times").html("倒计时："+$("#times").attr("t")+"秒");
-  		}
-  	},1000);
-  	var recordtimer=setInterval(function(){
-			$.ajax({
-				cache: true,
-				type: "POST",
-				url:"/queryrecord",
-				async: true,
-				success: function(data) {
-					eval("var jsondata="+data);
-					var total=jsondata.total;
-					var win=jsondata.win;
-					if(total!=undefined &&win!= undefined){
-						$("#record").html("机器战绩："+total+"局"+win+"胜");
+	  	},1000);
+	  	var recordtimer=setInterval(function(){
+				$.ajax({
+					cache: true,
+					type: "POST",
+					url:"/queryrecord",
+					async: true,
+					success: function(data) {
+						eval("var jsondata="+data);
+						var total=jsondata.total;
+						var win=jsondata.win;
+						if(total!=undefined &&win!= undefined){
+							$("#record").html("机器战绩："+total+"局"+win+"胜");
+						}
+					},
+					error: function(msg){
+						//alert("请求异常");
 					}
-				},
-				error: function(msg){
-					//alert("请求异常");
-				}
-			});
-	}, 10000);
+				});
+		}, 10000);
+	
   	//初始化
   	function init(){
   		$("#qipan").html("");
@@ -72,7 +86,7 @@
 		$.ajax({
 			cache: true,
 			type: "POST",
-			url:"/start",
+			url:"/start?gamemod="+$("#gamemod").attr("val"),
 			async: false,
 			success: function(data) {
 				eval("var jsondata="+data);
@@ -82,7 +96,10 @@
 				}else{
 					canclick=true;
 					cookie=jsondata.cookie;
+					var total=jsondata.total;
+					var win=jsondata.win;
 					$("#title").html("比赛开始");
+					$("#record").html("机器战绩："+total+"局"+win+"胜");
 				}
 			},
 			error: function(msg){
@@ -153,7 +170,7 @@
 					}
 				}
 				canclick=false;
-				appendImg(0,x,y,"heiz.png");
+				appendImg(index,x,y,"heiz.png");
 				current=current.substr(0,index)+"1"+current.substr(index+1,current.length);
 				setTimeout(myclick(index), 500)
 			}
@@ -184,7 +201,7 @@
 		if(imgnm=="baiz.png"){
 			appendstr=appendstr+" class='border' "
 		}
-		appendstr=appendstr+" index='"+index+"' style='position: absolute;left: "+left+"px;top: "+top+"px;'>";
+		appendstr=appendstr+" id='img"+index+"' index='"+index+"' style='position: absolute;left: "+left+"px;top: "+top+"px;'>";
 		$("#qipan").append(appendstr);
 	}
 	function appendImgForIndex(index,imgnm){
@@ -212,6 +229,16 @@
 			async: true,
 			success: function(data) {
 				eval("var jsondata="+data);
+				if (jsondata.index==-2){
+					//alert(index);
+					$("#img"+index).remove();
+					$("#title").html("当前禁手，收回棋子");
+					current=current.substr(0,index)+"0"+current.substr(index+1,current.length);
+					canclick=true;
+					return false;
+				}else{
+					$("#title").html("正在比赛");
+				}
 				var xy=indexToXY(jsondata.index);
 				current=current.substr(0,jsondata.index)+"2"+current.substr(jsondata.index+1,current.length);
 				var arrxy=xy.split(",")
@@ -234,6 +261,7 @@
 			}
 		});
 	}
+
   	</script>
 </head>
 <body>
@@ -242,8 +270,13 @@
 		<div class="qipan" id="qipan"></div>
 		<div class="buttonlist">
 			<a href="javascript:void(0)" onclick="start()" id="startbtn">开始</a>
+			<div id="gamemod" val="0">
+				<div class="gamemod" val="0" style="background: #BD772A;">无禁手</div>
+				<div class="gamemod" val="1">禁手</div>
+			</div>
 			<div id="times" t="60">倒计时：60秒</div>
 			<div id="record"></div>
+			<div style="font-size: 12px;font-family: 微软雅黑;border: 1px solid #B6B6B6;margin: 20px 0px;">禁手规则：白子无禁手<h2>黑子三三禁手</h2>下子后形成两个及以上活三<h2>黑子四四禁手</h2>下子后形成两个及以上四子<h2>黑子长连禁手</h2>下子后出现超过五子的连棋</div>
 		</div>
 	</div>
 </body>

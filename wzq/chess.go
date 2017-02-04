@@ -12,6 +12,9 @@ const (
 	Color_black = 1
 	Color_white = 2
 	Color_eque  = 3
+	End_j3      = 4
+	End_j4      = 5
+	End_toLong  = 6
 )
 
 type Win struct {
@@ -21,6 +24,7 @@ type Win struct {
 }
 
 type Chess struct {
+	Forbid        bool
 	Started       bool
 	MuxChess      sync.Mutex
 	cookie        string
@@ -29,6 +33,7 @@ type Chess struct {
 	lastResult    int
 	lastTime      int64
 	lastE         float64
+	IsFirst       bool
 	MapWinArr     map[int]*Win ///当前棋局（经过转换）[赢法序号](状态)
 }
 
@@ -46,19 +51,26 @@ func (c *Chess) GetCurrent() (string, int) {
 }
 
 //请求新游戏，如果已经开始，返回空，否则初始化游戏，返回cookie
-func (c *Chess) NewGame() string {
+func (c *Chess) NewGame(gamemod string) string {
 	c.MuxChess.Lock()
 	defer c.MuxChess.Unlock()
 	if c.Started {
 		return ""
 	}
 	log.Println("新游戏开始")
+	if gamemod == "1" {
+		c.Forbid = true
+	} else {
+		c.Forbid = false
+	}
 	c.Started = true
 	c.Current = make([]int, 225)
 	c.CurrentString = ArrayToString(c.Current)
 	c.cookie = fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
 	c.lastTime = time.Now().Unix()
 	c.MapWinArr = make(map[int]*Win)
+	c.lastE = 0
+	c.IsFirst = true
 	//log.Println(c.MapWinArr)
 	return c.cookie
 }
@@ -77,6 +89,20 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 	//人类下棋
 	c.lastTime = time.Now().Unix()
 	c.Current[pos] = Color_black
+
+	if c.Forbid {
+		rr := CheckWin(pos, Color_black, c.Current, true)
+		if end, f := Forbid(pos, c.Current); end {
+			if rr != 0 && f != End_toLong {
+				// 直接赢
+			} else {
+				log.Println("禁手", c.Current, f)
+				c.Current[pos] = 0
+				return true, 0, -2
+			}
+		}
+	}
+
 	//log.Println(c.MapWinArr)
 	UpdateWinMap(c.MapWinArr, pos, Color_black)
 	c.CurrentString = ArrayToString(c.Current)
@@ -97,13 +123,19 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 		c.lastE = enow
 
 		time.Sleep(time.Millisecond * 100)
-		posWhite := Put(c.Current, c.MapWinArr)
+		posWhite := 0
+		if c.IsFirst {
+			posWhite = c.RandPut(pos)
+			c.IsFirst = false
+		} else {
+			posWhite = Put(c.Current, c.MapWinArr)
+		}
 		c.Current[posWhite] = Color_white
 		UpdateWinMap(c.MapWinArr, posWhite, Color_white)
 		c.CurrentString = ArrayToString(c.Current)
 		rw := CheckWin(posWhite, Color_white, c.Current, false)
 		if rw == 0 {
-			return true, rw, posWhite
+			return true, 0, posWhite
 		} else {
 			//机器赢或平，更新期望
 			tmpwArr := make(map[int]Win)
@@ -138,7 +170,6 @@ func (c *Chess) GetResult(cookie string, pos int) (bool, int, int) {
 			log.Println("平局,期望", enow)
 			UpdateW(x, 0, enow)
 		}
-
 		c.Started = false
 		c.lastResult = r
 		return true, r, -1
@@ -166,4 +197,15 @@ func (c *Chess) CheckCookie() {
 			c.MuxChess.Unlock()
 		}
 	}
+}
+
+func (c *Chess) RandPut(pos int) int {
+	t := []int{14, 15, 16, 1, -1, -14, -15, -16}
+	x := pos / 15
+	y := pos % 15
+	if x == 0 || x == 14 || y == 0 || y == 14 {
+		return 112
+	}
+	n := GRand.Intn(7)
+	return pos + t[n]
 }

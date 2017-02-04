@@ -1,7 +1,7 @@
 package wzq
 
 import (
-	"log"
+	//"log"
 	"math/rand"
 	"time"
 )
@@ -43,7 +43,7 @@ func UpdateW(x []int, E, Enow float64) {
 		GW[i] += 0.000001 * float64(x[i]) * (E - Enow)
 		//log.Println("权:", i, x[i], E, Enow, GW[i])
 	}
-	log.Println("更新后:", GW)
+	//log.Println("更新后:", GW)
 }
 
 //计算期望
@@ -235,20 +235,22 @@ func GetXVlues(arr []int, winArr map[int]Win) []int {
 			eArr[10] += len(GPosMap[i])
 		}
 	}
-	if eArr[13] > eArr[12] {
-		eArr[13] = eArr[13] - eArr[12]
-		eArr[12] = 0
-	} else {
-		eArr[12] = eArr[12] - eArr[13]
-		eArr[13] = 0
-	}
-	if eArr[11] > eArr[10] {
-		eArr[11] = eArr[11] - eArr[10]
-		eArr[10] = 0
-	} else {
-		eArr[10] = eArr[10] - eArr[11]
-		eArr[11] = 0
-	}
+	eArr[13], eArr[12] = eArr[13]-eArr[12], eArr[12]-eArr[13]
+	eArr[11], eArr[10] = eArr[11]-eArr[10], eArr[10]-eArr[11]
+	// if eArr[13] > eArr[12] {
+	// 	eArr[13] = eArr[13] - eArr[12]
+	// 	eArr[12] = 0
+	// } else {
+	// 	eArr[12] = eArr[12] - eArr[13]
+	// 	eArr[13] = 0
+	// }
+	// if eArr[11] > eArr[10] {
+	// 	eArr[11] = eArr[11] - eArr[10]
+	// 	eArr[10] = 0
+	// } else {
+	// 	eArr[10] = eArr[10] - eArr[11]
+	// 	eArr[11] = 0
+	// }
 
 	//连子
 	for _, v := range winArr {
